@@ -1,0 +1,87 @@
+apply plugin: 'com.android.application'
+def dbflow_version = "4.0.0-beta2"
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
+    defaultConfig {
+        applicationId "cl.sodired.ahenriquez.imagetwin"
+        minSdkVersion 14
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:25.0.1'
+    compile 'com.android.support:design:25.0.1'
+    testCompile 'junit:junit:4.12'
+
+    //Butterknife
+    compile 'com.jakewharton:butterknife:8.4.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'
+
+    //Commons IO
+    compile group: 'commons-io', name: 'commons-io', version: '2.5'
+
+    //Picasso
+    compile group: 'com.squareup.picasso', name: 'picasso', version: '2.5.2'
+
+    // DB-Flow
+    annotationProcessor "com.github.Raizlabs.DBFlow:dbflow-processor:${dbflow_version}"
+    compile "com.github.Raizlabs.DBFlow:dbflow-core:${dbflow_version}"
+    compile "com.github.Raizlabs.DBFlow:dbflow:${dbflow_version}"
+
+    // DB Flow para manejo de la base de datos
+    compile group: 'com.github.agrosner', name: 'DBFlow-Core', version: '1.0.3'
+
+    // https://github.com/square/leakcanary
+    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5'
+    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+    testCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
+
+    // Google GSON
+    compile 'com.google.code.gson:gson:2.8.0'
+
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    compile 'org.apache.commons:commons-lang3:3.5'
+
+    // Fix warning: http://stackoverflow.com/questions/37324917/new-warning-when-building-android-app-with-gradle
+    compile('com.github.tony19:logback-android-classic:1.1.1-6') {
+        exclude group: 'com.google.android'
+    }
+
+    // Roboelectric
+    testCompile "org.robolectric:robolectric:3.1.4"
+    testCompile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3'
+    testCompile group: 'com.google.guava', name: 'guava', version: '20.0'
+    compile group: 'com.google.guava', name: 'guava', version: '20.0'
+
+    // Simple Logging Facade 4 Java
+    compile 'org.slf4j:slf4j-api:1.7.21'
+
+    // Logback Android Core Module
+    compile 'com.github.tony19:logback-android-core:1.1.1-6'
+
+    // Lombok!
+    provided 'org.projectlombok:lombok:1.16.10'
+    testCompile 'org.projectlombok:lombok:1.16.10'
+    annotationProcessor "org.projectlombok:lombok:1.16.10"
+
+    //Retrofit
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+
+}
