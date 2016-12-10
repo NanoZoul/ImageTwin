@@ -62,6 +62,10 @@ public class ActivityPrincipal extends AppCompatActivity {
     @BindView(R.id.listViewPics)
     ListView listPics;
 
+    //Boton del menu que acciona la camara
+    @BindView(R.id.fab)
+    FloatingActionButton fab;
+
     //Adaptador de las imagenes al ListView
     AdaptadorTwin adaptador;
     ArrayList<ItemTwin> listaDeTwins = new ArrayList<>();
@@ -79,7 +83,6 @@ public class ActivityPrincipal extends AppCompatActivity {
         //Inicio de ButterKnife
         ButterKnife.bind(this);
         //Barra de navegacion
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -87,13 +90,11 @@ public class ActivityPrincipal extends AppCompatActivity {
                 mpath = Environment.getExternalStorageDirectory() + File.separator + MEDIA_DIRECTORY
                         + File.separator + nombreimagen;
                 File mi_foto = new File(mpath);
-
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mi_foto));
                 startActivityForResult(intent, 200);
             }
         });
-
         adaptador = new AdaptadorTwin(this,listaDeTwins);
         listPics.setAdapter(adaptador);
 
@@ -123,8 +124,7 @@ public class ActivityPrincipal extends AppCompatActivity {
         WebService.Factory.getInstance().sendPic(pic2).enqueue(new Callback<Pic>() {
             @Override
             public void onResponse(Call<Pic> call, Response<Pic> response) {
-                Log.d("APIRETURN2",String.valueOf(pic2.getLatitude()));
-                Log.d("APIRETURN2",String.valueOf(response.body()));
+                Log.d("APIRETURN2","DeviceId = " + response.body());
             }
             @Override
             public void onFailure(Call<Pic> call, Throwable t) {
@@ -138,7 +138,10 @@ public class ActivityPrincipal extends AppCompatActivity {
 
             int i = 0;
             for (final Pic p : pics) {
-                adaptador.add(obtenerTwin(p));
+                ItemTwin nuevoTwin = obtenerTwin(p);
+                if(nuevoTwin!=null){
+                    adaptador.add(nuevoTwin);
+                }
                 Log.d(String.valueOf(p.getId()) + " - ID: ", String.valueOf(p.getId()));
                 Log.d(String.valueOf(p.getId()) + " - Device: ", String.valueOf(p.getDeviceId()));
                 Log.d(String.valueOf(p.getId()) + " - Url: ", String.valueOf(p.getUrl()));
@@ -263,6 +266,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                     .build();
             // Commit
             pic.save();
+
         }
     }
 
@@ -275,14 +279,17 @@ public class ActivityPrincipal extends AppCompatActivity {
         String path = pic.getUrl();
         //Redimension de la imagen
         Bitmap bitmap = BitmapFactory.decodeFile(path);
-        Bitmap bitmapResize = Bitmap.createScaledBitmap(bitmap,600,600,true);
-        //Redondeo de la imagen
-        RoundedBitmapDrawable imagenRedonda1 =
-                RoundedBitmapDrawableFactory.create(getResources(), bitmapResize);
-        imagenRedonda1.setCornerRadius(bitmapResize.getHeight());
-        //Se crea el item twin que sera mostrado
-        ItemTwin nuevoTwin = new ItemTwin(imagenRedonda1,imagenRedonda1);
-        return nuevoTwin;
+        if(bitmap!=null){
+            Bitmap bitmapResize = Bitmap.createScaledBitmap(bitmap,600,600,true);
+            //Redondeo de la imagen
+            RoundedBitmapDrawable imagenRedonda1 =
+                    RoundedBitmapDrawableFactory.create(getResources(), bitmapResize);
+            imagenRedonda1.setCornerRadius(bitmapResize.getHeight());
+            //Se crea el item twin que sera mostrado
+            ItemTwin nuevoTwin = new ItemTwin(imagenRedonda1,imagenRedonda1);
+            return nuevoTwin;
+        }
+        return null;
     }
 
 }
