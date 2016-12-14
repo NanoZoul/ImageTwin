@@ -151,6 +151,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                 Log.d(String.valueOf(p.getId()) + " - Positive: ", String.valueOf(p.getPositive()));
                 Log.d(String.valueOf(p.getId()) + " - Negative: ", String.valueOf(p.getNegative()));
                 Log.d(String.valueOf(p.getId()) + " - Warning: ", String.valueOf(p.getWarning()));
+                log.debug("Prueba1","aksdjas");
                 i++;
             }
         }
