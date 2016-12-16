@@ -5,6 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.location.Address;
+import android.location.Criteria;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,18 +29,23 @@ import android.view.MenuItem;
 import android.widget.ListView;
 
 import com.raizlabs.android.dbflow.sql.language.SQLite;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import org.apache.commons.lang3.RandomUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import cl.sodired.ahenriquez.imagetwin.domain.Pic;
+import cl.sodired.ahenriquez.imagetwin.domain.Twin;
 import cl.sodired.ahenriquez.imagetwin.service.WebService;
 import cl.sodired.ahenriquez.imagetwin.util.AdaptadorTwin;
 import cl.sodired.ahenriquez.imagetwin.util.DeviceUtils;
@@ -70,6 +81,7 @@ public class ActivityPrincipal extends AppCompatActivity {
     AdaptadorTwin adaptador;
     ArrayList<ItemTwin> listaDeTwins = new ArrayList<>();
 
+
     /**
      * Metodo on create
      * @param savedInstanceState
@@ -95,6 +107,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                 startActivityForResult(intent, 200);
             }
         });
+        //Asignacion del adaptador
         adaptador = new AdaptadorTwin(this,listaDeTwins);
         listPics.setAdapter(adaptador);
 
@@ -121,21 +134,22 @@ public class ActivityPrincipal extends AppCompatActivity {
                 .warning(RandomUtils.nextInt(0, 2))
                 .build();
         //PRUEBA DE POST
-        WebService.Factory.getInstance().sendPic(pic2).enqueue(new Callback<Pic>() {
+        WebService.Factory.getInstance().sendPic(pic2).enqueue(new Callback<Twin>() {
             @Override
-            public void onResponse(Call<Pic> call, Response<Pic> response) {
-                Log.d("APIRETURN2","DeviceId = " + response.body());
+            public void onResponse(Call<Twin> call, Response<Twin> response) {
+                Log.d("APIRETURN2","Twin = " + response.body());
+                final Twin nuevoTwin = response.body();
+                nuevoTwin.save();
             }
             @Override
-            public void onFailure(Call<Pic> call, Throwable t) {
+            public void onFailure(Call<Twin> call, Throwable t) {
                 Log.d("APIRETURN2",String.valueOf(t));
             }
         });
 
-        //Prueba de base de datos
+        //Mostar los Twin almacenados en la BD
         {
             List<Pic> pics = SQLite.select().from(Pic.class).queryList();
-
             int i = 0;
             for (final Pic p : pics) {
                 ItemTwin nuevoTwin = obtenerTwin(p);
@@ -254,20 +268,23 @@ public class ActivityPrincipal extends AppCompatActivity {
             //Se crea el item twin que sera mostrado
             ItemTwin nuevoTwin = new ItemTwin(imagenRedonda1,imagenRedonda1);
             adaptador.add(nuevoTwin);
+            //Ubicacion al momento de tomar la foto
+            double [] ubicacion = obtenerUbicacion();
+            Log.d("ObtenerLatitud",String.valueOf(ubicacion[0]));
+            Log.d("ObtenerLongitud",String.valueOf(ubicacion[1]));
             //Crear pic y guardar en la BD
             final Pic pic = Pic.builder()
                     .deviceId(DeviceUtils.getDeviceId(context))
-                    .latitude(RandomUtils.nextDouble())
-                    .longitude(RandomUtils.nextDouble())
+                    .latitude(ubicacion[0])
+                    .longitude(ubicacion[1])
                     .date(new Date().getTime())
                     .url(this.mpath)
-                    .positive(RandomUtils.nextInt(0, 100))
-                    .negative(RandomUtils.nextInt(0, 100))
-                    .warning(RandomUtils.nextInt(0, 2))
+                    .positive(0)
+                    .negative(0)
+                    .warning(0)
                     .build();
             // Commit
             pic.save();
-
         }
     }
 
@@ -282,15 +299,33 @@ public class ActivityPrincipal extends AppCompatActivity {
         Bitmap bitmap = BitmapFactory.decodeFile(path);
         if(bitmap!=null){
             Bitmap bitmapResize = Bitmap.createScaledBitmap(bitmap,600,600,true);
-            //Redondeo de la imagen
+            //Redondeo de la imagen foto local
             RoundedBitmapDrawable imagenRedonda1 =
                     RoundedBitmapDrawableFactory.create(getResources(), bitmapResize);
             imagenRedonda1.setCornerRadius(bitmapResize.getHeight());
+            //Redondeo de la imagen foto remota
+            RoundedBitmapDrawable imagenRedonda2 =
+                    RoundedBitmapDrawableFactory.create(getResources(), bitmapResize);
+            imagenRedonda2.setCornerRadius(bitmapResize.getHeight());
             //Se crea el item twin que sera mostrado
-            ItemTwin nuevoTwin = new ItemTwin(imagenRedonda1,imagenRedonda1);
+            ItemTwin nuevoTwin = new ItemTwin(imagenRedonda1,imagenRedonda2);
             return nuevoTwin;
         }
         return null;
     }
+
+    public double[] obtenerUbicacion(){
+        Criteria criteria = new Criteria();
+        LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Location location = mlocManager.getLastKnownLocation(mlocManager
+                .getBestProvider(criteria, false));
+        double latitude = location.getLatitude();
+        double longitud = location.getLongitude();
+        double [] ubicacion = new double[2];
+        ubicacion[0] = latitude;
+        ubicacion[1] = longitud;
+        return ubicacion;
+    }
+
 
 }
