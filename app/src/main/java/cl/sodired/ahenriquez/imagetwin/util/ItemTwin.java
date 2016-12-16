@@ -7,10 +7,10 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
  */
 
 public class ItemTwin {
-    public RoundedBitmapDrawable imagenUsuario;
-    public RoundedBitmapDrawable imagenPareja;
+    public String imagenUsuario;
+    public String imagenPareja;
 
-    public ItemTwin(RoundedBitmapDrawable imagen1, RoundedBitmapDrawable imagen2){
+    public ItemTwin(String imagen1, String imagen2){
         this.imagenUsuario = imagen1;
         this.imagenPareja = imagen2;
     }

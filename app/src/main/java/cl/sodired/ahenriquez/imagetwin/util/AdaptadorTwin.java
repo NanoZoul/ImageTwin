@@ -1,6 +1,7 @@
 package cl.sodired.ahenriquez.imagetwin.util;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,17 +25,20 @@ public class AdaptadorTwin extends ArrayAdapter<ItemTwin> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        // Obtener la foto para esta posicion
+        //Obtener Contexto
+        Context context = getContext();
+        // Obtener las fotos para esta posicion
         ItemTwin itemTwin = getItem(position);
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item, parent, false);
         }
+        //Obtener ImageView
         ImageView imagen0 = (ImageView) convertView.findViewById(R.id.twin_image);
         ImageView imagen1 = (ImageView) convertView.findViewById(R.id.twin_image2);
-        imagen0.setImageDrawable(itemTwin.imagenUsuario);
-        //imagen1.setImageDrawable(itemTwin.imagenPareja);
-        Context context = getContext();
-        Picasso.with(context).load("http://s-media-cache-ak0.pinimg.com/originals/73/2c/43/732c4366997849e06016237daa3006ca.jpg").resize(600,600).centerCrop().into(imagen1);
+        //Muestro las imagenes con Picasso
+        Picasso.with(context).load("file://" + itemTwin.imagenUsuario).resize(600,600).centerCrop().into(imagen0);
+        Picasso.with(context).load("file://" + itemTwin.imagenPareja).resize(600,600).centerCrop().into(imagen1);
+        Log.d("PATHIMAGEN",itemTwin.imagenUsuario);
         return convertView;
     }
 }

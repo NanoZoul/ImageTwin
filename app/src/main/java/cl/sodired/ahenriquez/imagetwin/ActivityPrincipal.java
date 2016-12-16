@@ -111,62 +111,20 @@ public class ActivityPrincipal extends AppCompatActivity {
         adaptador = new AdaptadorTwin(this,listaDeTwins);
         listPics.setAdapter(adaptador);
 
-        //Comunicacion con la API con retrofit - PRUEBA DE GET
-        WebService.Factory.getInstance().obtenerPic("pic").enqueue(new Callback<Pic>() {
-            @Override
-            public void onResponse(Call<Pic> call, Response<Pic> response) {
-                Log.d("APIRETURN",String.valueOf(response.body()));
-            }
-            @Override
-            public void onFailure(Call<Pic> call, Throwable t) {
-                Log.d("APIRETURN",String.valueOf(t));
-            }
-        });
-        //CREACION DE PIC DE PRUEBA
-        final Pic pic2 = Pic.builder()
-                .deviceId(DeviceUtils.getDeviceId(getApplicationContext()))
-                .latitude(RandomUtils.nextDouble())
-                .longitude(RandomUtils.nextDouble())
-                .date(new Date().getTime())
-                .url(this.mpath)
-                .positive(RandomUtils.nextInt(0, 100))
-                .negative(RandomUtils.nextInt(0, 100))
-                .warning(RandomUtils.nextInt(0, 2))
-                .build();
-        //PRUEBA DE POST
-        WebService.Factory.getInstance().sendPic(pic2).enqueue(new Callback<Twin>() {
-            @Override
-            public void onResponse(Call<Twin> call, Response<Twin> response) {
-                Log.d("APIRETURN2","Twin = " + response.body());
-                final Twin nuevoTwin = response.body();
-                nuevoTwin.save();
-            }
-            @Override
-            public void onFailure(Call<Twin> call, Throwable t) {
-                Log.d("APIRETURN2",String.valueOf(t));
-            }
-        });
-
         //Mostar los Twin almacenados en la BD
         {
-            List<Pic> pics = SQLite.select().from(Pic.class).queryList();
+            List<Twin> twins = SQLite.select().from(Twin.class).queryList();
             int i = 0;
-            for (final Pic p : pics) {
-                ItemTwin nuevoTwin = obtenerTwin(p);
-                if(nuevoTwin!=null){
-                    adaptador.add(nuevoTwin);
+            for (final Twin t : twins) {
+                ItemTwin nuevoItemTwin = obtenerItemTwin(t);
+                if(nuevoItemTwin!=null){
+                    adaptador.add(nuevoItemTwin);
+                    Log.d(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
+                    Log.d(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
+                    Log.d(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
+                    Log.d(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
+                    i++;
                 }
-                Log.d(String.valueOf(p.getId()) + " - ID: ", String.valueOf(p.getId()));
-                Log.d(String.valueOf(p.getId()) + " - Device: ", String.valueOf(p.getDeviceId()));
-                Log.d(String.valueOf(p.getId()) + " - Url: ", String.valueOf(p.getUrl()));
-                Log.d(String.valueOf(p.getId()) + " - Latitud: ", String.valueOf(p.getLatitude()));
-                Log.d(String.valueOf(p.getId()) + " - Longitud: ", String.valueOf(p.getLongitude()));
-                Log.d(String.valueOf(p.getId()) + " - Date: ", String.valueOf(p.getDate()));
-                Log.d(String.valueOf(p.getId()) + " - Positive: ", String.valueOf(p.getPositive()));
-                Log.d(String.valueOf(p.getId()) + " - Negative: ", String.valueOf(p.getNegative()));
-                Log.d(String.valueOf(p.getId()) + " - Warning: ", String.valueOf(p.getWarning()));
-                log.debug("Prueba1","aksdjas");
-                i++;
             }
         }
 
@@ -258,20 +216,8 @@ public class ActivityPrincipal extends AppCompatActivity {
                             //log.debug("ExternalStorage", "-> Uri = " + uri);
                         }
                     });
-            //Redimension de la imagen
-            Bitmap bitmap = BitmapFactory.decodeFile(this.mpath);
-            Bitmap bitmapResize = Bitmap.createScaledBitmap(bitmap,600,600,true);
-            //Redondeo de la imagen
-            RoundedBitmapDrawable imagenRedonda1 =
-                    RoundedBitmapDrawableFactory.create(getResources(), bitmapResize);
-            imagenRedonda1.setCornerRadius(bitmapResize.getHeight());
-            //Se crea el item twin que sera mostrado
-            ItemTwin nuevoTwin = new ItemTwin(imagenRedonda1,imagenRedonda1);
-            adaptador.add(nuevoTwin);
             //Ubicacion al momento de tomar la foto
             double [] ubicacion = obtenerUbicacion();
-            Log.d("ObtenerLatitud",String.valueOf(ubicacion[0]));
-            Log.d("ObtenerLongitud",String.valueOf(ubicacion[1]));
             //Crear pic y guardar en la BD
             final Pic pic = Pic.builder()
                     .deviceId(DeviceUtils.getDeviceId(context))
@@ -285,33 +231,65 @@ public class ActivityPrincipal extends AppCompatActivity {
                     .build();
             // Commit
             pic.save();
+            //Genero un nuevo twin con el pic creado
+            Twin nuevoTwin = generarTwinBD(pic);
+            //Se crea el item twin que sera mostrado
+            ItemTwin  nuevoItemTwin= obtenerItemTwin(nuevoTwin);
+            if(nuevoItemTwin!=null){
+                adaptador.add(nuevoItemTwin);
+            }
         }
     }
 
     /**
-     * Metodo que al darle un pic, me entrega el Twin
-     * @param pic
+     * Metodo que al darle un twin, me entrega un ItemTwin
+     * @param twin
      * @return
      */
-    private ItemTwin obtenerTwin(Pic pic){
-        String path = pic.getUrl();
-        //Redimension de la imagen
-        Bitmap bitmap = BitmapFactory.decodeFile(path);
-        if(bitmap!=null){
-            Bitmap bitmapResize = Bitmap.createScaledBitmap(bitmap,600,600,true);
-            //Redondeo de la imagen foto local
-            RoundedBitmapDrawable imagenRedonda1 =
-                    RoundedBitmapDrawableFactory.create(getResources(), bitmapResize);
-            imagenRedonda1.setCornerRadius(bitmapResize.getHeight());
-            //Redondeo de la imagen foto remota
-            RoundedBitmapDrawable imagenRedonda2 =
-                    RoundedBitmapDrawableFactory.create(getResources(), bitmapResize);
-            imagenRedonda2.setCornerRadius(bitmapResize.getHeight());
-            //Se crea el item twin que sera mostrado
-            ItemTwin nuevoTwin = new ItemTwin(imagenRedonda1,imagenRedonda2);
-            return nuevoTwin;
+    private ItemTwin obtenerItemTwin(Twin twin){
+        if(twin.getLocal().getUrl().isEmpty()||twin.getRemote().getUrl().isEmpty()){
+            return null;
         }
-        return null;
+        String pathLocal = twin.getLocal().getUrl();
+        String pathRemote = twin.getRemote().getUrl();
+        //Se crea el item twin que sera mostrado
+        ItemTwin nuevoTwin = new ItemTwin(pathLocal,pathRemote);
+        return nuevoTwin;
+    }
+
+    private Twin generarTwinBD(Pic pic){
+        //PRUEBA DE POST
+       /* WebService.Factory.getInstance().sendPic(pic2).enqueue(new Callback<Twin>() {
+            @Override
+            public void onResponse(Call<Twin> call, Response<Twin> response) {
+                Log.d("APIRETURN2","Twin = " + response.body());
+                final Twin nuevoTwin = response.body();
+                nuevoTwin.save();
+            }
+            @Override
+            public void onFailure(Call<Twin> call, Throwable t) {
+                Log.d("APIRETURN2",String.valueOf(t));
+            }
+        });*/
+
+        //Comunicacion con la API con retrofit - PRUEBA DE GET
+        /*WebService.Factory.getInstance().obtenerPic("pic").enqueue(new Callback<Pic>() {
+            @Override
+            public void onResponse(Call<Pic> call, Response<Pic> response) {
+                Log.d("APIRETURN",String.valueOf(response.body()));
+            }
+            @Override
+            public void onFailure(Call<Pic> call, Throwable t) {
+                Log.d("APIRETURN",String.valueOf(t));
+            }
+        });*/
+
+        final Twin twin = Twin.builder()
+                .local(pic)
+                .remote(pic)
+                .build();
+        twin.save();
+        return twin;
     }
 
     public double[] obtenerUbicacion(){
@@ -326,6 +304,4 @@ public class ActivityPrincipal extends AppCompatActivity {
         ubicacion[1] = longitud;
         return ubicacion;
     }
-
-
 }
