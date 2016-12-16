@@ -126,10 +126,10 @@ public class ActivityPrincipal extends AppCompatActivity {
                 ItemTwin nuevoItemTwin = obtenerItemTwin(t);
                 if(nuevoItemTwin!=null){
                     adaptador.add(nuevoItemTwin);
-                    Log.d(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
-                    Log.d(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
-                    Log.d(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
-                    Log.d(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
+                    log.debug(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
+                    log.debug(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
+                    log.debug(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
+                    log.debug(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
                     i++;
                 }
             }
@@ -232,8 +232,8 @@ public class ActivityPrincipal extends AppCompatActivity {
             //byte[] byteArray = stream.toByteArray();
             //Ubicacion al momento de tomar la foto
             double [] ubicacion = obtenerUbicacion();
-            Log.d("UBICACION1",String.valueOf(ubicacion[0]));
-            Log.d("UBICACION2",String.valueOf(ubicacion[1]));
+            log.debug("UBICACION1",String.valueOf(ubicacion[0]));
+            log.debug("UBICACION2",String.valueOf(ubicacion[1]));
             //Crear pic y guardar en la BD
             picHolder = Pic.builder()
                     .deviceId(DeviceUtils.getDeviceId(context))
@@ -281,7 +281,7 @@ public class ActivityPrincipal extends AppCompatActivity {
             }
             @Override
             public void onFailure(Call<Twin> call, Throwable t) {
-                Log.d("APIRETURN2",String.valueOf(t));
+                log.debug("APIRETURN2",String.valueOf(t));
             }
         });*/
 
@@ -297,7 +297,7 @@ public class ActivityPrincipal extends AppCompatActivity {
             }
             @Override
             public void onFailure(Call<Pic> call, Throwable t) {
-                Log.d("APIRETURN",String.valueOf(t));
+                log.debug("APIRETURN",String.valueOf(t));
             }
         });
 
