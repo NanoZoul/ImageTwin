@@ -37,8 +37,32 @@ public class AdaptadorTwin extends ArrayAdapter<ItemTwin> {
         ImageView imagen1 = (ImageView) convertView.findViewById(R.id.twin_image2);
         //Muestro las imagenes con Picasso
         Picasso.with(context).load("file://" + itemTwin.imagenUsuario).resize(600,600).centerCrop().into(imagen0);
-        Picasso.with(context).load("file://" + itemTwin.imagenPareja).resize(600,600).centerCrop().into(imagen1);
+        if(isOnlineNet()){
+            Picasso.with(context).load("http://192.168.0.20:8181/"+itemTwin.imagenPareja).resize(600,600).centerCrop().into(imagen1);
+        }else{
+            Picasso.with(context).load(R.drawable.noinet).resize(300,300).centerCrop().into(imagen1);
+        }
+        if(itemTwin.imagenPareja=="none"){
+            Picasso.with(context).load(R.drawable.noinet2).resize(300,300).centerCrop().into(imagen1);
+        }
+
         Log.d("PATHIMAGEN",itemTwin.imagenUsuario);
         return convertView;
+    }
+
+    public Boolean isOnlineNet() {
+
+        try {
+            Process p = java.lang.Runtime.getRuntime().exec("ping -c 1 www.google.es");
+
+            int val           = p.waitFor();
+            boolean reachable = (val == 0);
+            return reachable;
+
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return false;
     }
 }

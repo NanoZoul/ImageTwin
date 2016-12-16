@@ -19,7 +19,7 @@ public interface WebService {
     @POST("pic/enviar")
     Call<Twin> sendPic(@Body Pic pic);
 
-    @GET("prueba/{user}")
+    @GET("usuarios/{user}")
     Call<Pic> obtenerPic(@Path("user") String user);
 
     class Factory{
