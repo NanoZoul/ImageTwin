@@ -1,6 +1,7 @@
 package cl.sodired.ahenriquez.imagetwin.service;
 
 import cl.sodired.ahenriquez.imagetwin.domain.Pic;
+import cl.sodired.ahenriquez.imagetwin.domain.Twin;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -16,7 +17,7 @@ import retrofit2.http.Path;
 public interface WebService {
     String BASE_URL = "http://192.168.0.20:8181/";
     @POST("pic/enviar")
-    Call<Pic> sendPic(@Body Pic pic);
+    Call<Twin> sendPic(@Body Pic pic);
 
     @GET("prueba/{user}")
     Call<Pic> obtenerPic(@Path("user") String user);

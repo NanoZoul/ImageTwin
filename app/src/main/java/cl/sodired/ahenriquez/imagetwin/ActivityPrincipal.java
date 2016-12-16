@@ -5,6 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.location.Address;
+import android.location.Criteria;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,18 +29,23 @@ import android.view.MenuItem;
 import android.widget.ListView;
 
 import com.raizlabs.android.dbflow.sql.language.SQLite;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import org.apache.commons.lang3.RandomUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import cl.sodired.ahenriquez.imagetwin.domain.Pic;
+import cl.sodired.ahenriquez.imagetwin.domain.Twin;
 import cl.sodired.ahenriquez.imagetwin.service.WebService;
 import cl.sodired.ahenriquez.imagetwin.util.AdaptadorTwin;
 import cl.sodired.ahenriquez.imagetwin.util.DeviceUtils;
@@ -62,9 +73,14 @@ public class ActivityPrincipal extends AppCompatActivity {
     @BindView(R.id.listViewPics)
     ListView listPics;
 
+    //Boton del menu que acciona la camara
+    @BindView(R.id.fab)
+    FloatingActionButton fab;
+
     //Adaptador de las imagenes al ListView
     AdaptadorTwin adaptador;
     ArrayList<ItemTwin> listaDeTwins = new ArrayList<>();
+
 
     /**
      * Metodo on create
@@ -79,7 +95,6 @@ public class ActivityPrincipal extends AppCompatActivity {
         //Inicio de ButterKnife
         ButterKnife.bind(this);
         //Barra de navegacion
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -87,68 +102,29 @@ public class ActivityPrincipal extends AppCompatActivity {
                 mpath = Environment.getExternalStorageDirectory() + File.separator + MEDIA_DIRECTORY
                         + File.separator + nombreimagen;
                 File mi_foto = new File(mpath);
-
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mi_foto));
                 startActivityForResult(intent, 200);
             }
         });
-
+        //Asignacion del adaptador
         adaptador = new AdaptadorTwin(this,listaDeTwins);
         listPics.setAdapter(adaptador);
 
-        //Comunicacion con la API con retrofit - PRUEBA DE GET
-        WebService.Factory.getInstance().obtenerPic("pic").enqueue(new Callback<Pic>() {
-            @Override
-            public void onResponse(Call<Pic> call, Response<Pic> response) {
-                Log.d("APIRETURN",String.valueOf(response.body()));
-            }
-            @Override
-            public void onFailure(Call<Pic> call, Throwable t) {
-                Log.d("APIRETURN",String.valueOf(t));
-            }
-        });
-        //CREACION DE PIC DE PRUEBA
-        final Pic pic2 = Pic.builder()
-                .deviceId(DeviceUtils.getDeviceId(getApplicationContext()))
-                .latitude(RandomUtils.nextDouble())
-                .longitude(RandomUtils.nextDouble())
-                .date(new Date().getTime())
-                .url(this.mpath)
-                .positive(RandomUtils.nextInt(0, 100))
-                .negative(RandomUtils.nextInt(0, 100))
-                .warning(RandomUtils.nextInt(0, 2))
-                .build();
-        //PRUEBA DE POST
-        WebService.Factory.getInstance().sendPic(pic2).enqueue(new Callback<Pic>() {
-            @Override
-            public void onResponse(Call<Pic> call, Response<Pic> response) {
-                Log.d("APIRETURN2",String.valueOf(pic2.getLatitude()));
-                Log.d("APIRETURN2",String.valueOf(response.body()));
-            }
-            @Override
-            public void onFailure(Call<Pic> call, Throwable t) {
-                Log.d("APIRETURN2",String.valueOf(t));
-            }
-        });
-
-        //Prueba de base de datos
+        //Mostar los Twin almacenados en la BD
         {
-            List<Pic> pics = SQLite.select().from(Pic.class).queryList();
-
+            List<Twin> twins = SQLite.select().from(Twin.class).queryList();
             int i = 0;
-            for (final Pic p : pics) {
-                adaptador.add(obtenerTwin(p));
-                Log.d(String.valueOf(p.getId()) + " - ID: ", String.valueOf(p.getId()));
-                Log.d(String.valueOf(p.getId()) + " - Device: ", String.valueOf(p.getDeviceId()));
-                Log.d(String.valueOf(p.getId()) + " - Url: ", String.valueOf(p.getUrl()));
-                Log.d(String.valueOf(p.getId()) + " - Latitud: ", String.valueOf(p.getLatitude()));
-                Log.d(String.valueOf(p.getId()) + " - Longitud: ", String.valueOf(p.getLongitude()));
-                Log.d(String.valueOf(p.getId()) + " - Date: ", String.valueOf(p.getDate()));
-                Log.d(String.valueOf(p.getId()) + " - Positive: ", String.valueOf(p.getPositive()));
-                Log.d(String.valueOf(p.getId()) + " - Negative: ", String.valueOf(p.getNegative()));
-                Log.d(String.valueOf(p.getId()) + " - Warning: ", String.valueOf(p.getWarning()));
-                i++;
+            for (final Twin t : twins) {
+                ItemTwin nuevoItemTwin = obtenerItemTwin(t);
+                if(nuevoItemTwin!=null){
+                    adaptador.add(nuevoItemTwin);
+                    Log.d(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
+                    Log.d(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
+                    Log.d(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
+                    Log.d(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
+                    i++;
+                }
             }
         }
 
@@ -240,49 +216,92 @@ public class ActivityPrincipal extends AppCompatActivity {
                             //log.debug("ExternalStorage", "-> Uri = " + uri);
                         }
                     });
-            //Redimension de la imagen
-            Bitmap bitmap = BitmapFactory.decodeFile(this.mpath);
-            Bitmap bitmapResize = Bitmap.createScaledBitmap(bitmap,600,600,true);
-            //Redondeo de la imagen
-            RoundedBitmapDrawable imagenRedonda1 =
-                    RoundedBitmapDrawableFactory.create(getResources(), bitmapResize);
-            imagenRedonda1.setCornerRadius(bitmapResize.getHeight());
-            //Se crea el item twin que sera mostrado
-            ItemTwin nuevoTwin = new ItemTwin(imagenRedonda1,imagenRedonda1);
-            adaptador.add(nuevoTwin);
+            //Ubicacion al momento de tomar la foto
+            double [] ubicacion = obtenerUbicacion();
             //Crear pic y guardar en la BD
             final Pic pic = Pic.builder()
                     .deviceId(DeviceUtils.getDeviceId(context))
-                    .latitude(RandomUtils.nextDouble())
-                    .longitude(RandomUtils.nextDouble())
+                    .latitude(ubicacion[0])
+                    .longitude(ubicacion[1])
                     .date(new Date().getTime())
                     .url(this.mpath)
-                    .positive(RandomUtils.nextInt(0, 100))
-                    .negative(RandomUtils.nextInt(0, 100))
-                    .warning(RandomUtils.nextInt(0, 2))
+                    .positive(0)
+                    .negative(0)
+                    .warning(0)
                     .build();
             // Commit
             pic.save();
+            //Genero un nuevo twin con el pic creado
+            Twin nuevoTwin = generarTwinBD(pic);
+            //Se crea el item twin que sera mostrado
+            ItemTwin  nuevoItemTwin= obtenerItemTwin(nuevoTwin);
+            if(nuevoItemTwin!=null){
+                adaptador.add(nuevoItemTwin);
+            }
         }
     }
 
     /**
-     * Metodo que al darle un pic, me entrega el Twin
-     * @param pic
+     * Metodo que al darle un twin, me entrega un ItemTwin
+     * @param twin
      * @return
      */
-    private ItemTwin obtenerTwin(Pic pic){
-        String path = pic.getUrl();
-        //Redimension de la imagen
-        Bitmap bitmap = BitmapFactory.decodeFile(path);
-        Bitmap bitmapResize = Bitmap.createScaledBitmap(bitmap,600,600,true);
-        //Redondeo de la imagen
-        RoundedBitmapDrawable imagenRedonda1 =
-                RoundedBitmapDrawableFactory.create(getResources(), bitmapResize);
-        imagenRedonda1.setCornerRadius(bitmapResize.getHeight());
+    private ItemTwin obtenerItemTwin(Twin twin){
+        if(twin.getLocal().getUrl().isEmpty()||twin.getRemote().getUrl().isEmpty()){
+            return null;
+        }
+        String pathLocal = twin.getLocal().getUrl();
+        String pathRemote = twin.getRemote().getUrl();
         //Se crea el item twin que sera mostrado
-        ItemTwin nuevoTwin = new ItemTwin(imagenRedonda1,imagenRedonda1);
+        ItemTwin nuevoTwin = new ItemTwin(pathLocal,pathRemote);
         return nuevoTwin;
     }
 
+    private Twin generarTwinBD(Pic pic){
+        //PRUEBA DE POST
+       /* WebService.Factory.getInstance().sendPic(pic2).enqueue(new Callback<Twin>() {
+            @Override
+            public void onResponse(Call<Twin> call, Response<Twin> response) {
+                Log.d("APIRETURN2","Twin = " + response.body());
+                final Twin nuevoTwin = response.body();
+                nuevoTwin.save();
+            }
+            @Override
+            public void onFailure(Call<Twin> call, Throwable t) {
+                Log.d("APIRETURN2",String.valueOf(t));
+            }
+        });*/
+
+        //Comunicacion con la API con retrofit - PRUEBA DE GET
+        /*WebService.Factory.getInstance().obtenerPic("pic").enqueue(new Callback<Pic>() {
+            @Override
+            public void onResponse(Call<Pic> call, Response<Pic> response) {
+                Log.d("APIRETURN",String.valueOf(response.body()));
+            }
+            @Override
+            public void onFailure(Call<Pic> call, Throwable t) {
+                Log.d("APIRETURN",String.valueOf(t));
+            }
+        });*/
+
+        final Twin twin = Twin.builder()
+                .local(pic)
+                .remote(pic)
+                .build();
+        twin.save();
+        return twin;
+    }
+
+    public double[] obtenerUbicacion(){
+        Criteria criteria = new Criteria();
+        LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Location location = mlocManager.getLastKnownLocation(mlocManager
+                .getBestProvider(criteria, false));
+        double latitude = location.getLatitude();
+        double longitud = location.getLongitude();
+        double [] ubicacion = new double[2];
+        ubicacion[0] = latitude;
+        ubicacion[1] = longitud;
+        return ubicacion;
+    }
 }
