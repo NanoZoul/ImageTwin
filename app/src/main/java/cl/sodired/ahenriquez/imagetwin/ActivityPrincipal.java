@@ -13,6 +13,7 @@ import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
@@ -108,11 +109,12 @@ public class ActivityPrincipal extends AppCompatActivity {
         setSupportActionBar(toolbar);
         //Inicio de ButterKnife
         ButterKnife.bind(this);
-        //Barra de navegacion
-        /*cargando = new ProgressDialog(this);
-        cargando.setTitle("Descargando");
+        //Mensaje Cargando
+        cargando = new ProgressDialog(this);
+        cargando.setTitle("Iniciando");
         cargando.setMessage("Por favor espere...");
-        cargando.show();*/
+        cargando.show();
+        //Barra de navegacion
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -144,6 +146,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                     i++;
                 }
             }
+            cargando.dismiss();
         }
 
     }
@@ -239,8 +242,7 @@ public class ActivityPrincipal extends AppCompatActivity {
             Log.d("UBICACION",String.valueOf(ubicacion[0]));
 
             //Codificar la imagen en octal
-            Bitmap bm = BitmapFactory.decodeFile(mpath);
-            Bitmap resized = Bitmap.createScaledBitmap(bm, 600, 600, true);
+            Bitmap resized = escalarImagen(BitmapFactory.decodeFile(mpath));
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             resized.compress(Bitmap.CompressFormat.JPEG, 90, baos);
             byte[] b = baos.toByteArray();
@@ -269,12 +271,8 @@ public class ActivityPrincipal extends AppCompatActivity {
      * @return
      */
     private ItemTwin obtenerItemTwin(Twin twin){
-        String pathLocal = twin.getLocal().getUrl();
-        String pathRemote = twin.getRemote().getUrl();
-        Log.d("MYERROR",pathLocal);
-        Log.d("MYERROR",pathRemote);
         //Se crea el item twin que sera mostrado
-        return new ItemTwin(pathLocal,pathRemote);
+        return new ItemTwin(twin.getLocal(),twin.getRemote());
     }
 
     private void generarTwinBD(Pic pic){
@@ -346,5 +344,23 @@ public class ActivityPrincipal extends AppCompatActivity {
             ubicacion[1]= 0;
         }
         return ubicacion;
+    }
+
+    public Bitmap escalarImagen(Bitmap myBitmap){
+        final int maxSize = 600;
+        int outWidth;
+        int outHeight;
+        int inWidth = myBitmap.getWidth();
+        int inHeight = myBitmap.getHeight();
+        if(inWidth > inHeight){
+            outWidth = maxSize;
+            outHeight = (inHeight * maxSize) / inWidth;
+        } else {
+            outHeight = maxSize;
+            outWidth = (inWidth * maxSize) / inHeight;
+        }
+
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(myBitmap, outWidth, outHeight, false);
+        return resizedBitmap;
     }
 }

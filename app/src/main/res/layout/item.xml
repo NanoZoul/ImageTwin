@@ -3,24 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:background="#000"
+    android:background="#fff"
     android:layout_height="wrap_content">
 
-        <ImageView
+        <ImageButton
             android:id="@+id/twin_image"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_alignParentLeft="true"
             android:paddingTop="4dp"
-            android:paddingBottom="4dp"/>
+            android:paddingBottom="4dp"
+            android:scaleType="centerCrop"
+            android:background="#FFF"/>
 
-        <ImageView
+        <ImageButton
             android:id="@+id/twin_image2"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_alignParentRight="true"
             android:paddingTop="4dp"
-            android:paddingBottom="4dp"/>
+            android:paddingBottom="4dp"
+            android:scaleType="centerCrop"
+            android:background="#FFF"/>
     <View
         android:layout_width="match_parent"
         android:layout_height="10dp"

@@ -2,15 +2,17 @@ package cl.sodired.ahenriquez.imagetwin.util;
 
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 
+import cl.sodired.ahenriquez.imagetwin.domain.Pic;
+
 /**
  * Created by sandi on 21-11-2016.
  */
 
 public class ItemTwin {
-    public String imagenUsuario;
-    public String imagenPareja;
+    public Pic imagenUsuario;
+    public Pic imagenPareja;
 
-    public ItemTwin(String imagen1, String imagen2){
+    public ItemTwin(Pic imagen1, Pic imagen2){
         this.imagenUsuario = imagen1;
         this.imagenPareja = imagen2;
     }
