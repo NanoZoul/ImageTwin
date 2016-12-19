@@ -50,7 +50,7 @@ public class Pic extends BaseModel {
      */
     @Column
     @Getter
-    Long date;
+    Long fecha;
 
     /**
      * URL de la foto
@@ -94,4 +94,10 @@ public class Pic extends BaseModel {
     @Getter
     Integer warning;
 
+    /**
+     * Imagen
+     */
+    @Column
+    @Getter
+    String imagen;
 }

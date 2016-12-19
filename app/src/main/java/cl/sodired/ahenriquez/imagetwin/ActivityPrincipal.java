@@ -3,6 +3,7 @@ package cl.sodired.ahenriquez.imagetwin;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -18,10 +19,13 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -32,6 +36,7 @@ import com.raizlabs.android.dbflow.sql.language.SQLite;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.RandomUtils;
 
 import java.io.File;
@@ -50,6 +55,7 @@ import cl.sodired.ahenriquez.imagetwin.service.WebService;
 import cl.sodired.ahenriquez.imagetwin.util.AdaptadorTwin;
 import cl.sodired.ahenriquez.imagetwin.util.DeviceUtils;
 import cl.sodired.ahenriquez.imagetwin.util.ItemTwin;
+import cl.sodired.ahenriquez.imagetwin.util.PackageUtils;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -80,6 +86,10 @@ public class ActivityPrincipal extends AppCompatActivity {
     //Adaptador de las imagenes al ListView
     AdaptadorTwin adaptador;
     ArrayList<ItemTwin> listaDeTwins = new ArrayList<>();
+
+
+    //Varible permisos GPS
+    private static final int MY_PERMISSION_ACCESS_COURSE_LOCATION = 11;
 
 
     /**
@@ -218,26 +228,30 @@ public class ActivityPrincipal extends AppCompatActivity {
                     });
             //Ubicacion al momento de tomar la foto
             double [] ubicacion = obtenerUbicacion();
+            Log.d("UBICACION",String.valueOf(ubicacion[0]));
+
+            //Codificar la imagen en octal
+            Bitmap bm = BitmapFactory.decodeFile(mpath);
+            Bitmap resized = Bitmap.createScaledBitmap(bm, 600, 600, true);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            resized.compress(Bitmap.CompressFormat.JPEG, 90, baos);
+            byte[] b = baos.toByteArray();
+            String imagen = Base64.encodeToString(b,Base64.DEFAULT);
+
             //Crear pic y guardar en la BD
             final Pic pic = Pic.builder()
                     .deviceId(DeviceUtils.getDeviceId(context))
                     .latitude(ubicacion[0])
                     .longitude(ubicacion[1])
-                    .date(new Date().getTime())
+                    .fecha(new Date().getTime())
                     .url(this.mpath)
                     .positive(0)
                     .negative(0)
                     .warning(0)
+                    .imagen(imagen)
                     .build();
-            // Commit
-            pic.save();
             //Genero un nuevo twin con el pic creado
-            Twin nuevoTwin = generarTwinBD(pic);
-            //Se crea el item twin que sera mostrado
-            ItemTwin  nuevoItemTwin= obtenerItemTwin(nuevoTwin);
-            if(nuevoItemTwin!=null){
-                adaptador.add(nuevoItemTwin);
-            }
+            generarTwinBD(pic);
         }
     }
 
@@ -247,61 +261,82 @@ public class ActivityPrincipal extends AppCompatActivity {
      * @return
      */
     private ItemTwin obtenerItemTwin(Twin twin){
-        if(twin.getLocal().getUrl().isEmpty()||twin.getRemote().getUrl().isEmpty()){
-            return null;
-        }
         String pathLocal = twin.getLocal().getUrl();
         String pathRemote = twin.getRemote().getUrl();
+        Log.d("MYERROR",pathLocal);
+        Log.d("MYERROR",pathRemote);
         //Se crea el item twin que sera mostrado
-        ItemTwin nuevoTwin = new ItemTwin(pathLocal,pathRemote);
-        return nuevoTwin;
+        return new ItemTwin(pathLocal,pathRemote);
     }
 
-    private Twin generarTwinBD(Pic pic){
+    private void generarTwinBD(Pic pic){
         //PRUEBA DE POST
-       /* WebService.Factory.getInstance().sendPic(pic2).enqueue(new Callback<Twin>() {
+       WebService.Factory.getInstance().sendPic(pic).enqueue(new Callback<Twin>() {
             @Override
             public void onResponse(Call<Twin> call, Response<Twin> response) {
-                Log.d("APIRETURN2","Twin = " + response.body());
-                final Twin nuevoTwin = response.body();
-                nuevoTwin.save();
+                    final Pic picRemoto = response.body().getRemote();
+                    picRemoto.save();
+                    final Pic picLocal = response.body().getLocal();
+                    picLocal.save();
+                    final Twin nuevoTwin = Twin.builder()
+                            .local(picLocal)
+                            .remote(picRemoto)
+                            .build();
+                    nuevoTwin.save();
+                    Log.d("MYERROR",String.valueOf(nuevoTwin));
+                    ItemTwin nuevoItemTwin = obtenerItemTwin(nuevoTwin);
+                    adaptador.add(nuevoItemTwin);
             }
             @Override
             public void onFailure(Call<Twin> call, Throwable t) {
                 Log.d("APIRETURN2",String.valueOf(t));
+                View view = findViewById(android.R.id.content);
+                Snackbar.make(view, "Ops! Tenemos problemas para acceder a nuestra base de datos.", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
             }
-        });*/
+        });
 
         //Comunicacion con la API con retrofit - PRUEBA DE GET
         /*WebService.Factory.getInstance().obtenerPic("pic").enqueue(new Callback<Pic>() {
             @Override
             public void onResponse(Call<Pic> call, Response<Pic> response) {
-                Log.d("APIRETURN",String.valueOf(response.body()));
+                if(response.body().getUrl()!=null) {
+                    Log.d("APIRETURN",String.valueOf(response.body()));
+                    picHolder = response.body();
+                    almacenarPicDesdeBD();
+                }else{
+                    almacenarPicDesdeBD();
+                    Log.d("AQUIPASE2","none");
+                }
             }
             @Override
             public void onFailure(Call<Pic> call, Throwable t) {
                 Log.d("APIRETURN",String.valueOf(t));
             }
         });*/
-
-        final Twin twin = Twin.builder()
-                .local(pic)
-                .remote(pic)
-                .build();
-        twin.save();
-        return twin;
     }
 
     public double[] obtenerUbicacion(){
         Criteria criteria = new Criteria();
         LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if ( ContextCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_COARSE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
+
+            ActivityCompat.requestPermissions( this, new String[] {  android.Manifest.permission.ACCESS_COARSE_LOCATION  },
+                    MY_PERMISSION_ACCESS_COURSE_LOCATION);
+        }
         Location location = mlocManager.getLastKnownLocation(mlocManager
                 .getBestProvider(criteria, false));
-        double latitude = location.getLatitude();
-        double longitud = location.getLongitude();
         double [] ubicacion = new double[2];
-        ubicacion[0] = latitude;
-        ubicacion[1] = longitud;
+        if(location!=null){
+            double latitude = location.getLatitude();
+            double longitud = location.getLongitude();
+
+            ubicacion[0] = latitude;
+            ubicacion[1] = longitud;
+        }else{
+            ubicacion[0]= 0;
+            ubicacion[1]= 0;
+        }
         return ubicacion;
     }
 }

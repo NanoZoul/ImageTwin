@@ -36,8 +36,8 @@ public class AdaptadorTwin extends ArrayAdapter<ItemTwin> {
         ImageView imagen0 = (ImageView) convertView.findViewById(R.id.twin_image);
         ImageView imagen1 = (ImageView) convertView.findViewById(R.id.twin_image2);
         //Muestro las imagenes con Picasso
-        Picasso.with(context).load("file://" + itemTwin.imagenUsuario).resize(600,600).centerCrop().into(imagen0);
-        Picasso.with(context).load("file://" + itemTwin.imagenPareja).resize(600,600).centerCrop().into(imagen1);
+        Picasso.with(context).load("http://192.168.0.14:8181/" + itemTwin.imagenUsuario).resize(600,600).centerCrop().into(imagen0);
+        Picasso.with(context).load("http://192.168.0.14:8181/" + itemTwin.imagenPareja).resize(600,600).centerCrop().into(imagen1);
         Log.d("PATHIMAGEN",itemTwin.imagenUsuario);
         return convertView;
     }
