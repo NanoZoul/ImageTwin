@@ -1,6 +1,7 @@
 package cl.sodired.ahenriquez.imagetwin;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -87,6 +88,9 @@ public class ActivityPrincipal extends AppCompatActivity {
     AdaptadorTwin adaptador;
     ArrayList<ItemTwin> listaDeTwins = new ArrayList<>();
 
+    //ProgressDialog
+    ProgressDialog cargando;
+
 
     //Varible permisos GPS
     private static final int MY_PERMISSION_ACCESS_COURSE_LOCATION = 11;
@@ -105,6 +109,10 @@ public class ActivityPrincipal extends AppCompatActivity {
         //Inicio de ButterKnife
         ButterKnife.bind(this);
         //Barra de navegacion
+        /*cargando = new ProgressDialog(this);
+        cargando.setTitle("Descargando");
+        cargando.setMessage("Por favor espere...");
+        cargando.show();*/
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
