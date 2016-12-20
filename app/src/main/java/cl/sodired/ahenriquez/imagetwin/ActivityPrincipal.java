@@ -273,7 +273,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                     .deviceId(DeviceUtils.getDeviceId(context))
                     .latitude(ubicacion[0])
                     .longitude(ubicacion[1])
-                    .fecha(new Date().getTime())
+                    .fecha("0")
                     .url(this.mpath)
                     .positive(0)
                     .negative(0)
@@ -282,6 +282,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                     .build();
             //Genero un nuevo twin con el pic creado
             generarTwinBD(pic);
+            Log.d("Fecha",String.valueOf(new Date().getTime()));
         }
     }
 

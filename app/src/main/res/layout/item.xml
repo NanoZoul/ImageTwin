@@ -4,31 +4,33 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:background="#fff"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
         <ImageButton
             android:id="@+id/twin_image"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:paddingTop="4dp"
             android:paddingBottom="4dp"
             android:scaleType="centerCrop"
-            android:background="#FFF"/>
+            android:background="#fff"
+            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"/>
 
         <ImageButton
             android:id="@+id/twin_image2"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:paddingTop="4dp"
             android:paddingBottom="4dp"
             android:scaleType="centerCrop"
-            android:background="#FFF"/>
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="10dp"
-        android:background="#FFF"
-        android:layout_below="@+id/twin_image"
-        />
+            android:background="#fff"
+            android:layout_marginRight="5dp"
+            android:layout_marginEnd="5dp"/>
 </RelativeLayout>

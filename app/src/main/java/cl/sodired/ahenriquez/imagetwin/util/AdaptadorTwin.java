@@ -62,8 +62,8 @@ public class AdaptadorTwin extends ArrayAdapter<ItemTwin> {
         Intent intent = new Intent(this.activity,PicInfo.class);
         intent.putExtra("url",pic.getUrl())
                 .putExtra("fecha",String.valueOf(pic.getFecha()))
-                .putExtra("longitud",String.valueOf(pic.getLongitude()))
-                .putExtra("latitud",String.valueOf(pic.getLatitude()))
+                .putExtra("longitud",pic.getLongitude())
+                .putExtra("latitud",pic.getLatitude())
                 .putExtra("negative",String.valueOf(pic.getNegative()))
                 .putExtra("positive",String.valueOf(pic.getPositive()))
                 .putExtra("warning",String.valueOf(pic.getWarning()));
