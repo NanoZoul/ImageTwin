@@ -65,14 +65,20 @@ public class PicInfo extends AppCompatActivity {
         //Obtener Localizacion
         double latitud = 0;
         double longitud = 0;
-        List<Address> geo = localizacion(intent.getDoubleExtra("latitud",latitud),intent.getDoubleExtra("longitud",longitud));
-        //Dar valores a los elementos
-        ubicacion.setText(geo.get(0).getAddressLine(0));
+        if(intent.getDoubleExtra("latitud",latitud)==0){
+            ciudadPais.setText("Sin dirección");
+            ubicacion.setText("Sin información ciudad-pais");
+        }else {
+            List<Address> geo = localizacion(intent.getDoubleExtra("latitud", latitud),
+                    intent.getDoubleExtra("longitud", longitud));
+            //Dar valores a los elementos
+            ciudadPais.setText(geo.get(0).getLocality() + " - " + geo.get(0).getCountryName());
+            ubicacion.setText(geo.get(0).getAddressLine(0));
+        }
         negative.setText(intent.getStringExtra("negative"));
         positive.setText(intent.getStringExtra("positive"));
         warning.setText(intent.getStringExtra("warning"));
         fecha.setText(intent.getStringExtra("fecha"));
-        ciudadPais.setText(geo.get(0).getLocality() + " - " + geo.get(0).getCountryName());
         Picasso.with(context).load("http://192.168.0.14:8181/" + intent.getStringExtra("url")).resize(600,600).centerCrop().into(imagen);
     }
 
@@ -82,14 +88,15 @@ public class PicInfo extends AppCompatActivity {
         geocoder = new Geocoder(this, Locale.getDefault());
         try{
             addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
-
+            return addresses;
+            /*
             String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
             String city = addresses.get(0).getLocality();
             String state = addresses.get(0).getAdminArea();
             String country = addresses.get(0).getCountryName();
             String postalCode = addresses.get(0).getPostalCode();
             String knownName = addresses.get(0).getFeatureName(); // Only if available else return NULL
-            return addresses;
+            */
         }catch (IOException e){
             Log.d("Localizacion", String.valueOf(e));
         }

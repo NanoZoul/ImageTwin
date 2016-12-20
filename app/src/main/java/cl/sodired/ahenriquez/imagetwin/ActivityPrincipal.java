@@ -28,7 +28,6 @@ import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Base64;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -58,6 +57,7 @@ import cl.sodired.ahenriquez.imagetwin.util.AdaptadorTwin;
 import cl.sodired.ahenriquez.imagetwin.util.DeviceUtils;
 import cl.sodired.ahenriquez.imagetwin.util.ItemTwin;
 import cl.sodired.ahenriquez.imagetwin.util.PackageUtils;
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -151,10 +151,10 @@ public class ActivityPrincipal extends AppCompatActivity {
                         ItemTwin nuevoItemTwin = obtenerItemTwin(t);
                         if (nuevoItemTwin != null) {
                             adaptador.add(nuevoItemTwin);
-                            Log.d(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
-                            Log.d(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
-                            Log.d(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
-                            Log.d(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
+                            log.debug(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
+                            log.debug(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
+                            log.debug(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
+                            log.debug(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
                             i++;
                         }
                     }
@@ -259,7 +259,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                     });
             //Ubicacion al momento de tomar la foto
             double [] ubicacion = obtenerUbicacion();
-            Log.d("UBICACION",String.valueOf(ubicacion[0]));
+            log.debug("UBICACION",String.valueOf(ubicacion[0]));
 
             //Codificar la imagen en octal
             Bitmap resized = escalarImagen(BitmapFactory.decodeFile(mpath));
@@ -282,7 +282,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                     .build();
             //Genero un nuevo twin con el pic creado
             generarTwinBD(pic);
-            Log.d("Fecha",String.valueOf(new Date().getTime()));
+            log.debug("Fecha",String.valueOf(new Date().getTime()));
         }
     }
 
@@ -316,14 +316,13 @@ public class ActivityPrincipal extends AppCompatActivity {
                                 .remote(picRemoto)
                                 .build();
                         nuevoTwin.save();
-                        Log.d("MYERROR",String.valueOf(nuevoTwin));
                         ItemTwin nuevoItemTwin = obtenerItemTwin(nuevoTwin);
                         adaptador.add(nuevoItemTwin);
                         cargando.dismiss();
                 }
                 @Override
                 public void onFailure(Call<Twin> call, Throwable t) {
-                    Log.d("APIRETURN2",String.valueOf(t));
+                    log.debug("APIRETURN2",String.valueOf(t));
                     cargando.dismiss();
                     Snackbar.make(view, "Ops! Tenemos problemas para acceder a nuestra base de datos.", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
