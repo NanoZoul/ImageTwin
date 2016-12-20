@@ -92,9 +92,15 @@ public class ActivityPrincipal extends AppCompatActivity {
     //ProgressDialog
     ProgressDialog cargando;
 
-
     //Varible permisos GPS
     private static final int MY_PERMISSION_ACCESS_COURSE_LOCATION = 11;
+
+    //Instancia de las utilidades
+    PackageUtils pu = new PackageUtils();
+
+    //View para el mensaje popup
+    @BindView(android.R.id.content)
+    View view;
 
 
     /**
@@ -118,37 +124,51 @@ public class ActivityPrincipal extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String nombreimagen = getCode() + ".jpg";
-                mpath = Environment.getExternalStorageDirectory() + File.separator + MEDIA_DIRECTORY
-                        + File.separator + nombreimagen;
-                File mi_foto = new File(mpath);
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mi_foto));
-                startActivityForResult(intent, 200);
+                if(pu.isNetDisponible(getApplicationContext()) && pu.isOnlineNet()) {
+                    String nombreimagen = getCode() + ".jpg";
+                    mpath = Environment.getExternalStorageDirectory() + File.separator + MEDIA_DIRECTORY
+                            + File.separator + nombreimagen;
+                    File mi_foto = new File(mpath);
+                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mi_foto));
+                    startActivityForResult(intent, 200);
+                }else{
+                    Snackbar.make(view, "Ops! No hemos detectado conexion de red. Verifica tu conexión", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
             }
         });
         //Asignacion del adaptador
         adaptador = new AdaptadorTwin(this,listaDeTwins);
         listPics.setAdapter(adaptador);
-
-        //Mostar los Twin almacenados en la BD
-        {
-            List<Twin> twins = SQLite.select().from(Twin.class).queryList();
-            int i = 0;
-            for (final Twin t : twins) {
-                ItemTwin nuevoItemTwin = obtenerItemTwin(t);
-                if(nuevoItemTwin!=null){
-                    adaptador.add(nuevoItemTwin);
-                    Log.d(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
-                    Log.d(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
-                    Log.d(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
-                    Log.d(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
-                    i++;
+        if(pu.isNetDisponible(getApplicationContext()) && pu.isOnlineNet()) {
+            //Mostar los Twin almacenados en la BD
+            {
+                List<Twin> twins = SQLite.select().from(Twin.class).queryList();
+                int i = 0;
+                if(twins.size()>0){
+                    for (final Twin t : twins) {
+                        ItemTwin nuevoItemTwin = obtenerItemTwin(t);
+                        if (nuevoItemTwin != null) {
+                            adaptador.add(nuevoItemTwin);
+                            Log.d(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
+                            Log.d(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
+                            Log.d(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
+                            Log.d(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
+                            i++;
+                        }
+                    }
+                }else{
+                    Snackbar.make(view, "Bienvenido, para comenzar toma una foto", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
                 }
+                cargando.dismiss();
             }
+        }else{
             cargando.dismiss();
+            Snackbar.make(view, "Ops! No hemos detectado conexion de red. Verifica tu conexión", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
         }
-
     }
 
     /**
@@ -276,32 +296,43 @@ public class ActivityPrincipal extends AppCompatActivity {
     }
 
     private void generarTwinBD(Pic pic){
-        //PRUEBA DE POST
-       WebService.Factory.getInstance().sendPic(pic).enqueue(new Callback<Twin>() {
-            @Override
-            public void onResponse(Call<Twin> call, Response<Twin> response) {
-                    final Pic picRemoto = response.body().getRemote();
-                    picRemoto.save();
-                    final Pic picLocal = response.body().getLocal();
-                    picLocal.save();
-                    final Twin nuevoTwin = Twin.builder()
-                            .local(picLocal)
-                            .remote(picRemoto)
-                            .build();
-                    nuevoTwin.save();
-                    Log.d("MYERROR",String.valueOf(nuevoTwin));
-                    ItemTwin nuevoItemTwin = obtenerItemTwin(nuevoTwin);
-                    adaptador.add(nuevoItemTwin);
-            }
-            @Override
-            public void onFailure(Call<Twin> call, Throwable t) {
-                Log.d("APIRETURN2",String.valueOf(t));
-                View view = findViewById(android.R.id.content);
-                Snackbar.make(view, "Ops! Tenemos problemas para acceder a nuestra base de datos.", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
+        //POST
+        //Comprobamos si hay internet diponible
+        if(pu.isNetDisponible(getApplicationContext()) && pu.isOnlineNet()){
+            cargando = new ProgressDialog(this);
+            cargando.setTitle("Conectando");
+            cargando.setMessage("Por favor espere...");
+            cargando.show();
+           WebService.Factory.getInstance().sendPic(pic).enqueue(new Callback<Twin>() {
+                @Override
+                public void onResponse(Call<Twin> call, Response<Twin> response) {
+                        final Pic picRemoto = response.body().getRemote();
+                        picRemoto.save();
+                        final Pic picLocal = response.body().getLocal();
+                        picLocal.save();
+                        final Twin nuevoTwin = Twin.builder()
+                                .local(picLocal)
+                                .remote(picRemoto)
+                                .build();
+                        nuevoTwin.save();
+                        Log.d("MYERROR",String.valueOf(nuevoTwin));
+                        ItemTwin nuevoItemTwin = obtenerItemTwin(nuevoTwin);
+                        adaptador.add(nuevoItemTwin);
+                        cargando.dismiss();
+                }
+                @Override
+                public void onFailure(Call<Twin> call, Throwable t) {
+                    Log.d("APIRETURN2",String.valueOf(t));
+                    cargando.dismiss();
+                    Snackbar.make(view, "Ops! Tenemos problemas para acceder a nuestra base de datos.", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+            });
+        }else{
+            View view = findViewById(android.R.id.content);
+            Snackbar.make(view, "Ops! No hemos detectado conexion de red. Verifica tu conexión", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+        }
         //Comunicacion con la API con retrofit - PRUEBA DE GET
         /*WebService.Factory.getInstance().obtenerPic("pic").enqueue(new Callback<Pic>() {
             @Override

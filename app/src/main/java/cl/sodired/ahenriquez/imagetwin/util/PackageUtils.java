@@ -3,6 +3,8 @@ package cl.sodired.ahenriquez.imagetwin.util;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.compat.BuildConfig;
 
 
@@ -64,5 +66,12 @@ public class PackageUtils {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public boolean isNetDisponible(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo actNetInfo = connectivityManager.getActiveNetworkInfo();
+        return (actNetInfo != null && actNetInfo.isConnected());
     }
 }
