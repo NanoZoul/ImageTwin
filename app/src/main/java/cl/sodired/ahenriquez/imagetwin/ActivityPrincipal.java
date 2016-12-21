@@ -73,6 +73,8 @@ public class ActivityPrincipal extends AppCompatActivity {
     //Variables para directorio donde se almacenaran las imagenes
     private static String APP_DIRECTORY = "MyPictureApp/";
     private static String MEDIA_DIRECTORY = APP_DIRECTORY + "PictureApp";
+    //Varible permisos GPS
+    private static final int MY_PERMISSION_ACCESS_COURSE_LOCATION = 11;
 
     //Variable del Path de cada imagen
     String mpath = "";
@@ -91,9 +93,6 @@ public class ActivityPrincipal extends AppCompatActivity {
 
     //ProgressDialog
     ProgressDialog cargando;
-
-    //Varible permisos GPS
-    private static final int MY_PERMISSION_ACCESS_COURSE_LOCATION = 11;
 
     //Instancia de las utilidades
     PackageUtils pu = new PackageUtils();
@@ -132,7 +131,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mi_foto));
                     startActivityForResult(intent, 200);
-                }else{
+                } else {
                     Snackbar.make(view, "Ops! No hemos detectado conexion de red. Verifica tu conexión", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
