@@ -159,7 +159,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                         }
                     }
                 }else{
-                    Snackbar.make(view, "Ops! Tenemos problemas para conectar al servidor.", Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, "Bienvenido! Para comenzar, toma una fotografía.", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
                 cargando.dismiss();
@@ -336,6 +336,10 @@ public class ActivityPrincipal extends AppCompatActivity {
         }
     }
 
+    /**
+     * Obtiene la ubicacion del GPS
+     * @return devuelve la ubicacion como arreglo double, posicion 0 latitud pos 1 longitud.
+     */
     public double[] obtenerUbicacion(){
         Criteria criteria = new Criteria();
         LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);

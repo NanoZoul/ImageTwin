@@ -7,7 +7,6 @@ import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -167,7 +166,7 @@ public class PicInfo extends AppCompatActivity {
             String knownName = addresses.get(0).getFeatureName(); // Only if available else return NULL
             */
         }catch (IOException e){
-            Log.d("Localizacion", String.valueOf(e));
+
         }
         return null;
     }
@@ -185,7 +184,6 @@ public class PicInfo extends AppCompatActivity {
                     public void onResponse(Call<Integer> call, Response<Integer> response) {
                         likes = likes+1;
                         positive.setText(String.valueOf(likes));
-                        Log.d("reaccionLike",String.valueOf(likes));
                         Pic pic = SQLite.select().from(Pic.class).where(Pic_Table.idRemota.is(idRemota)).querySingle();
                         pic.setPositive(likes);
                         pic.save();

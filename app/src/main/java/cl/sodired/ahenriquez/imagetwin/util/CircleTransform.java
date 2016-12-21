@@ -7,6 +7,9 @@ import android.graphics.Paint;
 
 import com.squareup.picasso.Transformation;
 
+/**
+ * Clase que utiliza picasso para redondear la imagen
+ */
 public class CircleTransform implements Transformation {
     @Override
     public Bitmap transform(Bitmap source) {

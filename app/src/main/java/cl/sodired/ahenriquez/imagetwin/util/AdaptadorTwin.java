@@ -3,7 +3,6 @@ package cl.sodired.ahenriquez.imagetwin.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -103,7 +102,6 @@ public class AdaptadorTwin extends ArrayAdapter<ItemTwin> {
      * @param tipo dice si es usuario o la pareja
      */
     public void abrirPicInfo(Pic pic, String tipo){
-        Log.d("INFOPIC",String.valueOf(pic.getLatitude()));
         Intent intent = new Intent(this.activity,PicInfo.class);
         intent.putExtra("url",pic.getUrl())
                 .putExtra("idRemota",pic.getIdRemota())
