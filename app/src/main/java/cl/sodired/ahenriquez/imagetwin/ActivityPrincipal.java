@@ -7,13 +7,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.location.Address;
 import android.location.Criteria;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
-import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,8 +19,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Base64;
@@ -32,22 +26,13 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-
 import com.raizlabs.android.dbflow.sql.language.SQLite;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
-
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.commons.lang3.RandomUtils;
-
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import cl.sodired.ahenriquez.imagetwin.domain.Pic;
@@ -57,124 +42,180 @@ import cl.sodired.ahenriquez.imagetwin.util.AdaptadorTwin;
 import cl.sodired.ahenriquez.imagetwin.util.DeviceUtils;
 import cl.sodired.ahenriquez.imagetwin.util.ItemTwin;
 import cl.sodired.ahenriquez.imagetwin.util.PackageUtils;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Actividad principal de la aplicacion.
+ */
 @Slf4j
 public class ActivityPrincipal extends AppCompatActivity {
 
     /**
-     * Atributos y variables locales
+     * Variable estatica local que indica la carpeta donde se almacenaran las imagenes.
      */
+    private static final String APP_DIRECTORY = "MyPictureApp/";
 
-    //Variables para directorio donde se almacenaran las imagenes
-    private static String APP_DIRECTORY = "MyPictureApp/";
-    private static String MEDIA_DIRECTORY = APP_DIRECTORY + "PictureApp";
-    //Varible permisos GPS
+    /**
+     * Variable estatica local que indica el directorio de las imagenes.
+     */
+    private static final String MEDIA_DIRECTORY = APP_DIRECTORY + "PictureApp";
+
+    /**
+     * Variable estatica local que indica los permisos del GPS.
+     */
     private static final int MY_PERMISSION_ACCESS_COURSE_LOCATION = 11;
 
-    //Variable del Path de cada imagen
+    /**
+     * Variable global donde se almacenan los path de cada imagen.
+     */
     String mpath = "";
 
-    //ListView de las pic
+    /**
+     * ListView en donde se muestran los items de cada twin.
+     */
     @BindView(R.id.listViewPics)
     ListView listPics;
 
-    //Boton del menu que acciona la camara
+    /**
+     * Boton del menu de navegacion que acciona la camara.
+     */
     @BindView(R.id.fab)
     FloatingActionButton fab;
 
-    //Adaptador de las imagenes al ListView
+    /**
+     * Adaptador de las imagenes para mostrarlas en el ListView.
+     */
     AdaptadorTwin adaptador;
+
+    /**
+     * ArrayList que almacena los Items para agregarlos al adaptador.
+     */
     ArrayList<ItemTwin> listaDeTwins = new ArrayList<>();
 
-    //ProgressDialog
+    /**
+     * Ventana de dialogo que se muestra cuando se ingresa una imagen.
+     */
     ProgressDialog cargando;
 
-    //Instancia de las utilidades
-    PackageUtils pu = new PackageUtils();
+    /**
+     * Instancia que permite acceder a las utilidades.
+     */
+    PackageUtils packageUtils = new PackageUtils();
 
-    //View para el mensaje popup
+    /**
+     * View para inicializar el mensaje pop-up.
+     */
     @BindView(android.R.id.content)
     View view;
 
+    /**
+     * Toolbar, instancia de la barra de tareas.
+     */
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
 
     /**
-     * Metodo on create
-     * @param savedInstanceState
+     * Metodo on create del activity principal.
+     * @param savedInstanceState Bundle nulo que se modifica en el transcurso de la APP.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_principal);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        //Inicio de la barra de tareas
         setSupportActionBar(toolbar);
+
         //Inicio de ButterKnife
         ButterKnife.bind(this);
-        //Mensaje Cargando
+
+        //Mensaje de carga inicial
         cargando = new ProgressDialog(this);
         cargando.setTitle("Iniciando");
         cargando.setMessage("Por favor espere...");
         cargando.show();
-        //Barra de navegacion
+
+        //Listener de la barra de navegacion
         fab.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
-                if(pu.isNetDisponible(getApplicationContext()) && pu.isOnlineNet()) {
-                    String nombreimagen = getCode() + ".jpg";
+
+                //Comprobar si existe conexion de red e internet
+                if(packageUtils.isNetDisponible(getApplicationContext()) && packageUtils.isOnlineNet()) {
+
+                    //Generacion del nombre del path y creacion del archivo
+                    String nombreImagen = getCode() + ".jpg";
                     mpath = Environment.getExternalStorageDirectory() + File.separator + MEDIA_DIRECTORY
-                            + File.separator + nombreimagen;
+                            + File.separator + nombreImagen;
                     File mi_foto = new File(mpath);
+
+                    //Generacion del intent que se envia al activity result de la camara
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mi_foto));
+
+                    //Iniciar aciviy resl
                     startActivityForResult(intent, 200);
+
                 } else {
+
+                    //En caso de no haber conexion a internet, se envia un mensaje
                     Snackbar.make(view, "Ops! No hemos detectado conexion de red. Verifica tu conexión", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
             }
         });
+
         //Asignacion del adaptador
         adaptador = new AdaptadorTwin(this,listaDeTwins);
         listPics.setAdapter(adaptador);
-        if(pu.isOnlineNet()) {
+
+        //Comprobar conexion a internet
+        if(packageUtils.isOnlineNet()) {
             //Mostar los Twin almacenados en la BD
-            {
-                List<Twin> twins = SQLite.select().from(Twin.class).queryList();
-                int i = 0;
-                if(twins.size()>0){
-                    for (final Twin t : twins) {
-                        ItemTwin nuevoItemTwin = obtenerItemTwin(t);
-                        if (nuevoItemTwin != null) {
-                            adaptador.add(nuevoItemTwin);
-                            log.debug(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
-                            log.debug(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
-                            log.debug(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
-                            log.debug(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
-                            i++;
-                        }
+            List<Twin> twins = SQLite.select().from(Twin.class).queryList();
+
+            //Si existen twin en la BD, los muestra
+            if(twins.size()>0){
+                for (final Twin t : twins) {
+                    ItemTwin nuevoItemTwin = obtenerItemTwin(t);
+                    if (nuevoItemTwin != null) {
+                        adaptador.add(nuevoItemTwin);
+                        log.debug(String.valueOf(t.getLocal().getId()) + " - DeviceLocal: ", String.valueOf(t.getLocal().getDeviceId()));
+                        log.debug(String.valueOf(t.getLocal().getId()) + " - UrlLocal: ", String.valueOf(t.getLocal().getUrl()));
+                        log.debug(String.valueOf(t.getRemote().getId()) + " - DeviceRemoto: ", String.valueOf(t.getRemote().getDeviceId()));
+                        log.debug(String.valueOf(t.getRemote().getId()) + " - UrlRemota: ", String.valueOf(t.getRemote().getUrl()));
                     }
-                }else{
-                    Snackbar.make(view, "Bienvenido! Para comenzar, toma una fotografía.", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null).show();
                 }
-                cargando.dismiss();
+            } else {
+
+                //En caso de no haber ningun twin, se envia mensaje de bienvenida
+                Snackbar.make(view, "Bienvenido! Para comenzar, toma una fotografía.", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+
             }
+
+            //Cierre de venana de carga
+            cargando.dismiss();
+
         }else{
 
+            //Cierre de ventana de carga
             cargando.dismiss();
+
+            //No se ha detectado conexion a internet
             Snackbar.make(view, "Ops! No hemos detectado conexion de red. Verifica tu conexión", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
         }
     }
 
     /**
-     * Metodo que muestra el BarMenu
-     * @param menu
-     * @return
+     * Metodo que muestra el BarMenu.
+     * @param menu es el menu recibido para poder mosrar.
+     * @return boolean true, indicand que se inicio.
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -184,9 +225,9 @@ public class ActivityPrincipal extends AppCompatActivity {
     }
 
     /**
-     * Metodo para darle las funciones al bar menu
-     * @param item
-     * @return
+     * Metodo para darle las funciones al bar menu.
+     * @param item que se envia para capturar boton y realizar una accion.
+     * @return retorna true indicando que se realizo la accion.
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -204,22 +245,23 @@ public class ActivityPrincipal extends AppCompatActivity {
     }
 
     /**
-     * Metodo privado que genera un codigo unico segun la hora y fecha del sistema
-     * @return photoCode
+     * Metodo privado que genera un codigo unico segun la hora y fecha del sistema.
+     * @return El codigo generado para el nombre de la imagen.
      **/
     @SuppressLint("SimpleDateFormat")
     private String getCode()
     {
-        //Atributo estatico de la clase
+        //Generar un formato de fecha para diferencia los nombres de los archivos
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmddhhmmss");
         String date = dateFormat.format(new Date() );
-        String photoCode = "pic_" + date;
-        return photoCode;
+
+        //Retorna el nombre pic al inicio del nombre de la foto
+        return "pic_" + date;
     }
 
     /**
-     * Al momento que se termine de tomar la foto, guardara el path
-     * @param outState
+     * Al momento que se termine de tomar la foto, guardara el path.
+     * @param outState Bundle que inicia una instancia para guardar el path al salir de la camara.
      */
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -228,8 +270,8 @@ public class ActivityPrincipal extends AppCompatActivity {
     }
 
     /**
-     * El path que se guardo, vuelve a iniciarse
-     * @param savedInstanceState
+     * El path que se guardo, vuelve a iniciarse.
+     * @param savedInstanceState Bundle que recupera el path al reiniciar la instancia del activity.
      */
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
@@ -238,15 +280,17 @@ public class ActivityPrincipal extends AppCompatActivity {
     }
 
     /**
-     * Respuesta del activity de la camara
-     * @param requestCode
-     * @param resultCode
-     * @param data
+     * Respuesta del activity de la camara.
+     * @param requestCode codigo.
+     * @param resultCode indica si se recibio bien la fotografia desde la camara.
+     * @param data intent que contiene la informacion desde la camara.
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Context context = getApplicationContext();
+
+        //Si el resultado fue OK, escannea el archivo recibido por la camara y realiza las acciones
         if (resultCode == RESULT_OK) {
             MediaScannerConnection.scanFile(this,
                     new String[]{this.mpath}, null,
@@ -257,18 +301,19 @@ public class ActivityPrincipal extends AppCompatActivity {
                             //log.debug("ExternalStorage", "-> Uri = " + uri);
                         }
                     });
-            //Ubicacion al momento de tomar la foto
+
+            //Ubicacion GPS al momento de tomar la foto
             double [] ubicacion = obtenerUbicacion();
             log.debug("UBICACION",String.valueOf(ubicacion[0]));
 
-            //Codificar la imagen en octal
+            //Codificacion de la imagen en octal
             Bitmap resized = escalarImagen(BitmapFactory.decodeFile(mpath));
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             resized.compress(Bitmap.CompressFormat.JPEG, 90, baos);
             byte[] b = baos.toByteArray();
             String imagen = Base64.encodeToString(b,Base64.DEFAULT);
 
-            //Crear pic y guardar en la BD
+            //Crear pic sin guardar en la BD, solo para enviar la informacion al servidor
             final Pic pic = Pic.builder()
                     .deviceId(DeviceUtils.getDeviceId(context))
                     .latitude(ubicacion[0])
@@ -280,95 +325,151 @@ public class ActivityPrincipal extends AppCompatActivity {
                     .warning(0)
                     .imagen(imagen)
                     .build();
-            //Genero un nuevo twin con el pic creado
+
+            //Generar un nuevo twin con el pic creado
             generarTwinBD(pic);
             log.debug("Fecha",String.valueOf(new Date().getTime()));
         }
     }
 
     /**
-     * Metodo que al darle un twin, me entrega un ItemTwin
-     * @param twin
-     * @return
+     * Metodo que al darle un twin, me entrega un ItemTwin.
+     * @param twin recibido para poder obtener el pic local y remoto.
+     * @return ItemTwin que sera ingresado al adaptador para ser mostrado.
      */
     private ItemTwin obtenerItemTwin(Twin twin){
         //Se crea el item twin que sera mostrado
         return new ItemTwin(twin.getLocal(),twin.getRemote());
     }
 
+    /**
+     * Metodo que genera envia el pic capturado al servidor, luego el servidor envia un Twin
+     * el cual es almacenado en la base de datos local. A su vez solicita generar un item twin
+     * y lo agrega al adaptador para ser mostrado.
+     * @param pic generado por activity result y enviado para ser almacenado en BD remota.
+     */
     private void generarTwinBD(Pic pic){
-        //POST
-        //Comprobamos si hay internet diponible
-        if(pu.isNetDisponible(getApplicationContext()) && pu.isOnlineNet()){
+
+        //Comprobamos si hay red diponible
+        if(packageUtils.isNetDisponible(getApplicationContext())){
+
+            //Se muestra ventana de dialogo cargando
             cargando = new ProgressDialog(this);
             cargando.setTitle("Conectando");
             cargando.setMessage("Por favor espere...");
             cargando.show();
+
+            //Metodo POST que envia un pic a la API, la cual retorna un Twin
            WebService.Factory.getInstance().sendPic(pic).enqueue(new Callback<Twin>() {
+
+                //Respuesta positiva desde el servidor
                 @Override
                 public void onResponse(Call<Twin> call, Response<Twin> response) {
+
+                        //Creacion PicRemoto y guardado en BD Local
                         final Pic picRemoto = response.body().getRemote();
                         picRemoto.save();
+
+                        //Creacion PicLocal y guardado en BD Local
                         final Pic picLocal = response.body().getLocal();
                         picLocal.save();
+
+                        //Creacion Twin, al cual se le inserta el pic local y remoto
                         final Twin nuevoTwin = Twin.builder()
                                 .local(picLocal)
                                 .remote(picRemoto)
                                 .build();
                         nuevoTwin.save();
+
+                        //Creacion del ItemTwin, el cual sera añadido al adaptador
                         ItemTwin nuevoItemTwin = obtenerItemTwin(nuevoTwin);
+
+                        //Agregar item twin al adaptador
                         adaptador.add(nuevoItemTwin);
+
+                        //Cierre ventana de carga
                         cargando.dismiss();
                 }
+
+                //Error con conexion con el servidor
                 @Override
                 public void onFailure(Call<Twin> call, Throwable t) {
+
                     log.debug("APIRETURN2",String.valueOf(t));
+
+                    //Cierre de ventana de carga
                     cargando.dismiss();
+
+                    //Mostrar mensaje de error por conexion a la BD remota
                     Snackbar.make(view, "Ops! Tenemos problemas para acceder a nuestra base de datos.", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
             });
-        }else{
-            View view = findViewById(android.R.id.content);
+        } else {
+
+            //Mostrar mensaje de problemas de conexion de red
             Snackbar.make(view, "Ops! No hemos detectado conexion de red. Verifica tu conexión", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
         }
     }
 
     /**
-     * Obtiene la ubicacion del GPS
+     * Obtiene la ultima ubicacion conocida del GPS.
      * @return devuelve la ubicacion como arreglo double, posicion 0 latitud pos 1 longitud.
      */
     public double[] obtenerUbicacion(){
+
+        //Utilizacion de location manager para obtener ubicacion
         Criteria criteria = new Criteria();
         LocationManager mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if ( ContextCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_COARSE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
+
+        //Se checkean los permisos de GPS
+        if ( ContextCompat.checkSelfPermission(
+                this, android.Manifest.permission.ACCESS_COARSE_LOCATION )
+                != PackageManager.PERMISSION_GRANTED ) {
 
             ActivityCompat.requestPermissions( this, new String[] {  android.Manifest.permission.ACCESS_COARSE_LOCATION  },
                     MY_PERMISSION_ACCESS_COURSE_LOCATION);
         }
+
+        //Variable location que contendra la ubicacion GPS.
         Location location = mlocManager.getLastKnownLocation(mlocManager
                 .getBestProvider(criteria, false));
-        double [] ubicacion = new double[2];
-        if(location!=null){
-            double latitude = location.getLatitude();
-            double longitud = location.getLongitude();
 
-            ubicacion[0] = latitude;
-            ubicacion[1] = longitud;
-        }else{
+        //Generacion de arreglo de double que contendra longitud y latitud.
+        double [] ubicacion = new double[2];
+
+        //Si location obtenido es distinto de null, se envia la longitud y latitud, si no (0,0).
+        if(location!=null){
+
+            //Se guarda latitud y longitud en el arreglo.
+            ubicacion[0] = location.getLatitude();
+            ubicacion[1] = location.getLongitude();
+        } else {
+
+            //Si la location fue null, se envia latitud y longitud con valor cero.
             ubicacion[0]= 0;
             ubicacion[1]= 0;
         }
         return ubicacion;
     }
 
+    /**
+     * Metodo que escala la imagen obtenida desde la camara, se obtiene una imagen mas pequeña
+     * como de menor tamaño.
+     * @param myBitmap es el bitmap obtenido desde la camara.
+     * @return bitmap escalado.
+     */
     public Bitmap escalarImagen(Bitmap myBitmap){
+
+        //Asignacion de variables de tamanio de imagen, ancho y alto.
         final int maxSize = 600;
         int outWidth;
         int outHeight;
         int inWidth = myBitmap.getWidth();
         int inHeight = myBitmap.getHeight();
+
+        //Si el ancho es mayor que el alto se asigna el mayor tamanio al ancho, si no al alto.
         if(inWidth > inHeight){
             outWidth = maxSize;
             outHeight = (inHeight * maxSize) / inWidth;
@@ -377,6 +478,7 @@ public class ActivityPrincipal extends AppCompatActivity {
             outWidth = (inWidth * maxSize) / inHeight;
         }
 
+        //Se genera y retorna el bitmap redimencionado.
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(myBitmap, outWidth, outHeight, false);
         return resizedBitmap;
     }
