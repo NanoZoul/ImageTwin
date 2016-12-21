@@ -51,4 +51,12 @@ public class Twin extends BaseModel {
     @ForeignKey(tableClass = Pic.class)
     Pic remote;
 
+    @Column
+    @Getter
+    Integer idUsuario;
+
+    @Column
+    @Getter
+    Integer idPareja;
+
 }

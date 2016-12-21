@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -78,6 +79,7 @@ public class Pic extends BaseModel {
      */
     @Column
     @Getter
+    @Setter
     Integer positive;
 
     /**
@@ -85,6 +87,7 @@ public class Pic extends BaseModel {
      */
     @Column
     @Getter
+    @Setter
     Integer negative;
 
     /**
@@ -92,6 +95,7 @@ public class Pic extends BaseModel {
      */
     @Column
     @Getter
+    @Setter
     Integer warning;
 
     /**
@@ -100,4 +104,11 @@ public class Pic extends BaseModel {
     @Column
     @Getter
     String imagen;
+
+    /**
+     * Id en BD
+     */
+    @Column
+    @Getter
+    Integer idRemota;
 }

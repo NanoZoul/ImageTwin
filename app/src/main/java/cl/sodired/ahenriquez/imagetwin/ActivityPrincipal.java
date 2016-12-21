@@ -141,7 +141,7 @@ public class ActivityPrincipal extends AppCompatActivity {
         //Asignacion del adaptador
         adaptador = new AdaptadorTwin(this,listaDeTwins);
         listPics.setAdapter(adaptador);
-        if(pu.isNetDisponible(getApplicationContext()) && pu.isOnlineNet()) {
+        if(pu.isOnlineNet()) {
             //Mostar los Twin almacenados en la BD
             {
                 List<Twin> twins = SQLite.select().from(Twin.class).queryList();
@@ -159,12 +159,13 @@ public class ActivityPrincipal extends AppCompatActivity {
                         }
                     }
                 }else{
-                    Snackbar.make(view, "Bienvenido, para comenzar toma una foto", Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, "Ops! Tenemos problemas para conectar al servidor.", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
                 cargando.dismiss();
             }
         }else{
+
             cargando.dismiss();
             Snackbar.make(view, "Ops! No hemos detectado conexion de red. Verifica tu conexión", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
@@ -333,24 +334,6 @@ public class ActivityPrincipal extends AppCompatActivity {
             Snackbar.make(view, "Ops! No hemos detectado conexion de red. Verifica tu conexión", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
         }
-        //Comunicacion con la API con retrofit - PRUEBA DE GET
-        /*WebService.Factory.getInstance().obtenerPic("pic").enqueue(new Callback<Pic>() {
-            @Override
-            public void onResponse(Call<Pic> call, Response<Pic> response) {
-                if(response.body().getUrl()!=null) {
-                    Log.d("APIRETURN",String.valueOf(response.body()));
-                    picHolder = response.body();
-                    almacenarPicDesdeBD();
-                }else{
-                    almacenarPicDesdeBD();
-                    Log.d("AQUIPASE2","none");
-                }
-            }
-            @Override
-            public void onFailure(Call<Pic> call, Throwable t) {
-                Log.d("APIRETURN",String.valueOf(t));
-            }
-        });*/
     }
 
     public double[] obtenerUbicacion(){

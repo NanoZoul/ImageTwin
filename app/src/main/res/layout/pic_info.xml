@@ -20,6 +20,7 @@
         android:layout_below="@id/imageInfo"
         android:weightSum="3">
         <Button
+            android:id="@+id/likeBtn"
             android:text="Like"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -29,6 +30,7 @@
             android:background="#5eba7d"/>
 
         <Button
+            android:id="@+id/warnBtn"
             android:text="Warning"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -38,6 +40,7 @@
             android:background="#f69c55"/>
 
         <Button
+            android:id="@+id/dislikeBtn"
             android:text="Dislike"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -93,7 +96,7 @@
             android:paddingTop="5dp"
             android:paddingBottom="5dp"/>
         <TextView
-            android:id="@+id/negativeInfo"
+            android:id="@+id/warningInfo"
             android:textSize="15sp"
             android:textColor="#FFF"
             android:layout_width="wrap_content"
@@ -104,7 +107,7 @@
             android:paddingTop="5dp"
             android:paddingBottom="5dp"/>
         <TextView
-            android:id="@+id/warningInfo"
+            android:id="@+id/negativeInfo"
             android:textSize="15sp"
             android:textColor="#FFF"
             android:layout_width="wrap_content"

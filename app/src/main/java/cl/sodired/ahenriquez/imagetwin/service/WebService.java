@@ -15,12 +15,21 @@ import retrofit2.http.Path;
  */
 
 public interface WebService {
-    String BASE_URL = "http://192.168.0.14:8181/";
+    String BASE_URL = "http://172.20.10.4:8181/";
     @POST("pic/enviar")
     Call<Twin> sendPic(@Body Pic pic);
 
-    @GET("usuarios/{user}")
-    Call<Pic> obtenerPic(@Path("user") String user);
+    @POST("reaccion/like")
+    Call<Integer> incrementarLikes(@Body Integer valor);
+
+    @POST("reaccion/warn")
+    Call<Integer> incrementarDislikes(@Body Integer valor);
+
+    @POST("reaccion/dislike")
+    Call<Integer> incrementarWarn(@Body Integer valor);
+
+    @GET("isBdConnected")
+    Call<Boolean> isBdConnected(@Path("user") String user);
 
     class Factory{
         private  static WebService service;
