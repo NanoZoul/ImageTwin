@@ -176,6 +176,7 @@ public class PicInfo extends AppCompatActivity {
                     .rotate(-90)
                     .resize(600,600)
                     .centerCrop()
+                    .placeholder(R.drawable.noinet2)
                     .into(imagen);
         } else {
 
@@ -184,6 +185,7 @@ public class PicInfo extends AppCompatActivity {
                     .load("http://192.168.0.14:8181/" + intent.getStringExtra("url"))
                     .resize(600,600)
                     .centerCrop()
+                    .placeholder(R.drawable.noinet)
                     .into(imagen);
         }
 

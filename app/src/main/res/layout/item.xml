@@ -9,7 +9,7 @@
     android:paddingBottom="8dp">
 
         <ImageButton
-            android:id="@+id/twin_image"
+            android:id="@+id/img_user"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_alignParentLeft="true"
@@ -22,7 +22,7 @@
             android:layout_marginStart="5dp"/>
 
         <ImageButton
-            android:id="@+id/twin_image2"
+            android:id="@+id/img_pareja"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_alignParentRight="true"

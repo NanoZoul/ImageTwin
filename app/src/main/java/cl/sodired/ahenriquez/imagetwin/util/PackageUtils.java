@@ -9,9 +9,8 @@ import android.support.compat.BuildConfig;
 
 
 /**
- * Created by durrutia on 20-Oct-16.
+ * PackageUtils es la clase de utilidades
  */
-
 public class PackageUtils {
 
     /**
@@ -52,6 +51,10 @@ public class PackageUtils {
         return "0";
     }
 
+    /**
+     * Metodo que verifica la conexion a internet
+     * @return true si hay conexion a internet
+     */
     public static Boolean isOnlineNet() {
 
         try {
@@ -68,6 +71,11 @@ public class PackageUtils {
         return false;
     }
 
+    /**
+     * Metodo que verifica si se encuentra conectado a alguna red
+     * @param context recibe el contexto actual
+     * @return retorna true si la red esta conectada
+     */
     public boolean isNetDisponible(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager)
                  context.getSystemService(Context.CONNECTIVITY_SERVICE);

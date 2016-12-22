@@ -129,6 +129,7 @@ public class ActivityPrincipal extends AppCompatActivity {
         //Inicio de la barra de tareas
         setSupportActionBar(toolbar);
 
+
         //Inicio de ButterKnife
         ButterKnife.bind(this);
 
@@ -157,7 +158,7 @@ public class ActivityPrincipal extends AppCompatActivity {
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mi_foto));
 
-                    //Iniciar aciviy resl
+                    //Iniciar activity real
                     startActivityForResult(intent, 200);
 
                 } else {
