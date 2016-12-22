@@ -3,85 +3,105 @@ package cl.sodired.ahenriquez.imagetwin.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-
 import com.squareup.picasso.Picasso;
-
 import java.util.ArrayList;
 
+import butterknife.BindView;
 import cl.sodired.ahenriquez.imagetwin.PicInfo;
 import cl.sodired.ahenriquez.imagetwin.R;
 import cl.sodired.ahenriquez.imagetwin.domain.Pic;
 
 /**
- * Created by sandi on 21-11-2016.
+ * Clase AdaptadorTwin, el cual corresponde al adaptador del ListView que muestra los Twin.
  */
-
 public class AdaptadorTwin extends ArrayAdapter<ItemTwin> {
-    Activity activity;
-    PackageUtils pu;
+    /**
+     * Activity actual
+     */
+    private Activity activity;
 
     /**
-     * Constructor
-     * @param context contect
-     * @param users users
+     * ImageButton del usuario local
+     */
+    @BindView(R.id.twin_image)
+    private ImageButton imageButtonUsuario;
+
+    /**
+     * ImaggeButton del usuario remoto o pareja
+     */
+    @BindView(R.id.twin_image2)
+    private ImageButton imageButtonPareja;
+
+    /**
+     * Constructor del adaptador twin.
+     * @param context recibe el contexto de la activity actual.
+     * @param users corresponden a los ItemTwin que se muestran en el ListView.
      */
     public AdaptadorTwin(Context context, ArrayList<ItemTwin> users) {
         super(context, 0, users);
         activity = (Activity) context;
     }
 
-
     /**
      * View
-     * @param position position
-     * @param convertView convertView
-     * @param parent parent
-     * @return
+     * @param position posicion del ItemTwin actual.
+     * @param convertView view anterior para ser usada en caso de error.
+     * @param parent puede contener a otras Views.
+     * @return convertView que corresponde a la View anterior
      */
+    @NonNull
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+
         //Obtener Contexto
-        Context context = getContext();
-        // Obtener las fotos para esta posicion
+        final Context context = getContext();
+
+        // Obtener el itemTwin que contiene las Pic que seran mostradas
         final ItemTwin itemTwin = getItem(position);
+
+        //Convert view null, muestra view anterior del parent
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item, parent, false);
         }
-        //Obtener ImageView
-        ImageButton imagen0 = (ImageButton) convertView.findViewById(R.id.twin_image);
-        ImageButton imagen1 = (ImageButton) convertView.findViewById(R.id.twin_image2);
-        //Muestro las imagenes con Picasso
-            Picasso.with(context).load("http://172.20.10.4:8181/" + itemTwin.imagenUsuario.getUrl())
-                    .rotate(-90).resize(600,600)
-                    .transform(new CircleTransform())
-                    .centerCrop()
-                    .into(imagen0);
 
-            Picasso.with(context).load("http://172.20.10.4:8181/" + itemTwin.imagenPareja.getUrl())
-                    .resize(600,600)
-                    .transform(new CircleTransform())
-                    .centerCrop()
-                    .into(imagen1);
+        //Se muestra la imagen del usuario con Picasso
+        Picasso.with(context).load("http://192.168.0.14:8181/" + itemTwin.imagenUsuario.getUrl())
+                .rotate(-90).resize(600,600)
+                .transform(new CircleTransform())
+                .centerCrop()
+                .placeholder(R.drawable.noinet2)
+                .into(imageButtonUsuario);
+
+        //Se muestra la imagen de la pareja con Picasso
+        Picasso.with(context).load("http://192.168.0.14:8181/" + itemTwin.imagenPareja.getUrl())
+                .resize(600,600)
+                .transform(new CircleTransform())
+                .centerCrop()
+                .placeholder(R.drawable.noinet)
+                .into(imageButtonPareja);
+
         //Listener para la imagen local
-        imagen0.setOnClickListener(new View.OnClickListener(){
+        imageButtonUsuario.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 abrirPicInfo(itemTwin.imagenUsuario,"usuario");
             }
         });
+
         //Listener para la imagen remota
-        imagen1.setOnClickListener(new View.OnClickListener(){
+        imageButtonPareja.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 abrirPicInfo(itemTwin.imagenPareja,"pareja");
             }
         });
+
         return convertView;
     }
 
@@ -90,7 +110,7 @@ public class AdaptadorTwin extends ArrayAdapter<ItemTwin> {
      * @param pic que se enviara al otro metodo
      * @param tipo dice si es usuario o la pareja
      */
-    public void abrirPicInfo(Pic pic, String tipo){
+    private void abrirPicInfo(Pic pic, String tipo){
         Intent intent = new Intent(this.activity,PicInfo.class);
         intent.putExtra("url",pic.getUrl())
                 .putExtra("idRemota",pic.getIdRemota())
